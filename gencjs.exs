@@ -28,4 +28,4 @@ end)
 
 IO.inspect api_defs
 
-File.write(outFileName,"rapi=require('./reactive-api.js')\nmodule.exports=rapi(" <> :jsx.encode(api_defs) <> ")")
+File.write(outFileName,"rapi=require('reactive-api').create_reactive_api\nmodule.exports=rapi(" <> :jsx.encode(api_defs) <> ")")
