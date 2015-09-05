@@ -1,11 +1,9 @@
 defmodule Reactive.Api do
   def get_entity_id(contexts,context,module,args) do
-    #IO.inspect {"id resolution",module,args,context,contexts,contexts[context]}
     id=case context do
       :global -> [module | args]
       _c -> Reactive.Entity.request(contexts[context],{:get_context, context, module, args})
     end
-    #IO.inspect {"id resolution",module,args,context,id}
     id
   end
 
