@@ -11,10 +11,10 @@ defmodule Reactive.Api do
     quote do
       def exec([unquote(module)|args],{:observe,what=unquote(what)},contexts) do
         id=get_entity_id(contexts,unquote(context),unquote(module), args)
-        if apply(__MODULE__,unquote(auth_method),[id,contexts]) do
+        case apply(__MODULE__,unquote(auth_method),[id,contexts]) do
           Reactive.Entity.observe(id,what)
         else
-          throw "not allowed"
+          raise :not_allowed
         end
       end
       def exec([unquote(module)|args],{:unobserve,what=unquote(what)},contexts) do
@@ -22,7 +22,7 @@ defmodule Reactive.Api do
         if apply(__MODULE__,unquote(auth_method),[id,contexts]) do
           Reactive.Entity.unobserve(id,what)
         else
-          throw "not allowed"
+          raise :not_allowed
         end
       end
     end
@@ -48,7 +48,7 @@ defmodule Reactive.Api do
         if apply(__MODULE__,unquote(auth_method),[id,contexts]) do
           Reactive.Entity.request(id,{:api_request,args,contexts})
         else
-          throw "not allowed"
+          raise :not_allowed
         end
       end
       def exec([unquote(module)|margs],{:request,args=[unquote(type) | _],timeout},contexts) do
@@ -56,7 +56,7 @@ defmodule Reactive.Api do
         if apply(__MODULE__,unquote(auth_method),[id,contexts]) do
           Reactive.Entity.request(id,{:api_request,args,contexts},timeout)
         else
-          throw "not allowed"
+          raise :not_allowed
         end
       end
     end
@@ -82,7 +82,7 @@ defmodule Reactive.Api do
         if apply(__MODULE__,unquote(auth_method),[id,contexts]) do
           apply(unquote(module),:api_request,[unquote(type)|[id|[contexts|margs]]])
         else
-          throw "not allowed"
+          raise :not_allowed
         end
       end
       def exec([unquote(module)|args],{:request,[unquote(type) | margs],timeout},contexts) do
@@ -90,7 +90,7 @@ defmodule Reactive.Api do
         if apply(__MODULE__,unquote(auth_method),[id,contexts]) do
           apply(unquote(module),:api_request,[unquote(type)|[id|[contexts|margs]]])
         else
-          throw "not allowed"
+          raise :not_allowed
         end
       end
     end
@@ -128,7 +128,7 @@ defmodule Reactive.Api do
   end
 
   defp allow_gen(module,op,what,context) when is_list(what) do
-    List.flatten(Enum.map what, fn(w) -> allow_gen(module,op,w,context) end)
+    List.flatten(Enum.map(what, fn(w) -> allow_gen(module,op,w,context) end))
   end
   defp allow_gen(module,:observation,what,context) do
     [allow_observation(module,what,context)]
