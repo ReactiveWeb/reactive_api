@@ -8,7 +8,7 @@ defmodule Reactive.Api do
   end
 
   defp allow_observation(module,{what,auth_method},context) do
-    quote do
+    quote location: :keep do
       def exec([unquote(module)|id_args],{:observe,what=unquote(what)},contexts) do
         id=get_entity_id(contexts,unquote(context),unquote(module), id_args)
         case apply(__MODULE__,unquote(auth_method),[id,contexts,:observe,unquote(what)]) do
@@ -34,16 +34,16 @@ defmodule Reactive.Api do
   end
 
   defp allow_observation(module,what,context) do
-    quote do
+    quote location: :keep do
       def exec([unquote(module)|id_args],{:observe,what=unquote(what)},contexts) do
         id=get_entity_id(contexts,unquote(context),unquote(module), id_args)
         Reactive.Entity.observe(id,what)
       end
-      def exec([unquote(module)|id_args],{:observe,what=unquote(what)},contexts) do
+      def exec([unquote(module)|id_args],{:unobserve,what=unquote(what)},contexts) do
         id=get_entity_id(contexts,unquote(context),unquote(module), id_args)
         Reactive.Entity.unobserve(id,what)
       end
-      def exec([unquote(module)|id_args],{:observe,what=unquote(what)},contexts) do
+      def exec([unquote(module)|id_args],{:get,what=unquote(what)},contexts) do
         id=get_entity_id(contexts,unquote(context),unquote(module), id_args)
         Reactive.Entity.get(id,what)
       end
@@ -51,7 +51,7 @@ defmodule Reactive.Api do
   end
 
   defp allow_request(module,{type,auth_method},context) do
-    quote do
+    quote location: :keep do
       def exec([unquote(module)|id_args],{:request,args=[unquote(type) | _]},contexts) do
         id=get_entity_id(contexts,unquote(context),unquote(module), id_args)
         case apply(__MODULE__,unquote(auth_method),[id,contexts,:request,args]) do
@@ -70,7 +70,7 @@ defmodule Reactive.Api do
   end
 
   defp allow_request(module,type,context) do
-    quote do
+    quote location: :keep do
       def exec([unquote(module)|id_args],{:request,args=[unquote(type) | _]},contexts) do
         id=get_entity_id(contexts,unquote(context),unquote(module), id_args)
         Reactive.Entity.request(id,{:api_request,args,contexts})
@@ -84,7 +84,7 @@ defmodule Reactive.Api do
 
   defp allow_request_call(module,{type,auth_method},context) do
   #  IO.inspect({module,type,auth_method,context})
-    quote do
+    quote location: :keep do
       def exec([unquote(module)|id_args],{:request,aargs=[unquote(type) | args]},contexts) do
         id = get_entity_id(contexts,unquote(context),unquote(module), id_args)
         case apply(__MODULE__,unquote(auth_method),[id,contexts,:request,aargs]) do
@@ -103,7 +103,7 @@ defmodule Reactive.Api do
   end
 
   defp allow_request_call(module,type,context) do
-    quote do
+    quote location: :keep do
       def exec([unquote(module)|args],{:request,[unquote(type) | margs]},contexts) do
         id=get_entity_id(contexts,unquote(context),unquote(module), args)
         apply(unquote(module),:api_request,[unquote(type)|[id|[contexts|margs]]])
@@ -116,7 +116,7 @@ defmodule Reactive.Api do
   end
 
   defp allow_event(module,type,context) do
-    quote do
+    quote location: :keep do
       def exec([unquote(module)|args],{:event,args=[unquote(type) | _]},contexts) do
         id=get_entity_id(contexts,unquote(context),unquote(module), args)
         Reactive.Entity.request(id,{:api_event,args})
@@ -125,7 +125,7 @@ defmodule Reactive.Api do
   end
 
   defp allow_event_call(module,method,context) do
-    quote do
+    quote location: :keep do
       def exec([unquote(module)|args],{:event,margs=[unquote(method) | _]},contexts) do
         id=get_entity_id(contexts,unquote(context),unquote(module), args)
         apply(module,:api_event,id|margs)
@@ -170,7 +170,7 @@ defmodule Reactive.Api do
   end
 
   defmacro __using__(_opts) do
-    quote do
+    quote location: :keep do
       require Reactive.Api
       import Reactive.Api
 
