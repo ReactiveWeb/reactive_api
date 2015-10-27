@@ -1,7 +1,5 @@
 #!/usr/bin/env elixir
 
-
-
 [fileName,outFileName]=System.argv()
 
 code=File.read!(fileName)
@@ -28,4 +26,4 @@ end)
 
 IO.inspect api_defs
 
-File.write(outFileName,"rapi=require('reactive-api').create_reactive_api\nmodule.exports=rapi(" <> :jsx.encode(api_defs) <> ")")
+File.write(outFileName,"rapi=require('reactiveobserver-client').createReactiveApi\nmodule.exports=rapi(" <> :jsx.encode(api_defs) <> ")")
