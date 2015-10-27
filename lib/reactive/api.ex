@@ -1,22 +1,21 @@
 defmodule Reactive.Api do
 
-  defp allow_observation(module,{what,auth_method}) do
-    quote do
-      def exec(id=[unquote(module)|args],{:observe,what=unquote(what)},contexts) do
-        case apply(__MODULE__,unquote(auth_method),[id,contexts]) do
-          Reactive.Entity.observe(id,what)
-        else
-          raise :not_allowed
+
+  defp allow_observation(module,{what,auth_method},context) do
+    quote location: :keep do
+      def exec(id=[unquote(module)|id_args],{:observe,what=unquote(what)},contexts) do
+        case apply(__MODULE__,unquote(auth_method),[id,contexts,:observe,unquote(what)]) do
+          :allow -> Reactive.Entity.observe(id,what)
+          error -> raise error
         end
       end
-      def exec(id=[unquote(module)|args],{:unobserve,what=unquote(what)},contexts) do
-        if apply(__MODULE__,unquote(auth_method),[id,contexts]) do
-          Reactive.Entity.unobserve(id,what)
-        else
-          raise :not_allowed
+      def exec(id=[unquote(module)|id_args],{:unobserve,what=unquote(what)},contexts) do
+        case apply(__MODULE__,unquote(auth_method),[id,contexts,:observe,unquote(what)]) do
+          :allow -> Reactive.Entity.unobserve(id,what)
+          error -> raise error
         end
       end
-      def exec(id=[unquote(module)|args],{:get,what=unquote(what)},contexts) do
+      def exec(id=[unquote(module)|id_args],{:get,what=unquote(what)},contexts) do
         case apply(__MODULE__,unquote(auth_method),[id,contexts,:observe,unquote(what)]) do
           :allow -> Reactive.Entity.get(id,what)
           error -> raise error
@@ -26,33 +25,31 @@ defmodule Reactive.Api do
   end
 
   defp allow_observation(module,what) do
-    quote do
-      def exec(id=[unquote(module)|args],{:observe,what=unquote(what)},contexts) do
+    quote location: :keep do
+      def exec(id=[unquote(module)|id_args],{:observe,what=unquote(what)},_contexts) do
         Reactive.Entity.observe(id,what)
       end
-      def exec(id=[unquote(module)|args],{:unobserve,what=unquote(what)},contexts) do
+      def exec(id=[unquote(module)|id_args],{:unobserve,what=unquote(what)},_contexts) do
         Reactive.Entity.unobserve(id,what)
       end
-      def exec(id=[unquote(module)|args],{:get,what=unquote(what)},contexts) do
+      def exec(id=[unquote(module)|id_args],{:get,what=unquote(what)},_contexts) do
         Reactive.Entity.get(id,what)
       end
     end
   end
 
-  defp allow_request(module,{type,auth_method}) do
-    quote do
-      def exec(id=[unquote(module)|margs],{:request,args=[unquote(type) | _]},contexts) do
-        if apply(__MODULE__,unquote(auth_method),[id,contexts]) do
-          Reactive.Entity.request(id,{:api_request,args,contexts})
-        else
-          raise :not_allowed
+  defp allow_request(module,{type,auth_method},context) do
+    quote location: :keep do
+      def exec(id=[unquote(module)|id_args],{:request,args=[unquote(type) | _]},contexts) do
+        case apply(__MODULE__,unquote(auth_method),[id,contexts,:request,args]) do
+          :allow -> Reactive.Entity.request(id,{:api_request,args,contexts})
+          error -> raise error
         end
       end
-      def exec(id=[unquote(module)|margs],{:request,args=[unquote(type) | _],timeout},contexts) do
-        if apply(__MODULE__,unquote(auth_method),[id,contexts]) do
-          Reactive.Entity.request(id,{:api_request,args,contexts},timeout)
-        else
-          raise :not_allowed
+      def exec(id=[unquote(module)|id_args],{:request,args=[unquote(type) | _],timeout},contexts) do
+        case apply(__MODULE__,unquote(auth_method),[id,contexts,:request,args]) do
+          :allow -> Reactive.Entity.request(id,{:api_request,args,contexts},timeout)
+          error -> raise error
         end
       end
     end
@@ -69,20 +66,19 @@ defmodule Reactive.Api do
     end
   end
 
-  defp allow_request_call(module,{type,auth_method}) do
-    quote do
-      def exec(id=[unquote(module)|args],{:request,[unquote(type) | margs]},contexts) do
-        if apply(__MODULE__,unquote(auth_method),[id,contexts]) do
-          apply(unquote(module),:api_request,[unquote(type)|[id|[contexts|margs]]])
-        else
-          raise :not_allowed
+  defp allow_request_call(module,{type,auth_method},context) do
+  #  IO.inspect({module,type,auth_method,context})
+    quote location: :keep do
+      def exec(id=[unquote(module)|id_args],{:request,aargs=[unquote(type) | args]},contexts) do
+        case apply(__MODULE__,unquote(auth_method),[id,contexts,:request,aargs]) do
+          :allow -> apply(unquote(module),:api_request,[unquote(type)|[id|[contexts|args]]])
+          error -> raise error
         end
       end
-      def exec(id=[unquote(module)|args],{:request,[unquote(type) | margs],timeout},contexts) do
-        if apply(__MODULE__,unquote(auth_method),[id,contexts]) do
-          apply(unquote(module),:api_request,[unquote(type)|[id|[contexts|margs]]])
-        else
-          raise :not_allowed
+      def exec(id=[unquote(module)|id_args],{:request,aargs=[unquote(type) | args],timeout},contexts) do
+        case apply(__MODULE__,unquote(auth_method),[id,contexts,:request,aargs]) do
+          :allow -> apply(unquote(module),:api_request,[unquote(type)|[id|[contexts|args]]])
+          error -> raise error
         end
       end
     end
@@ -101,20 +97,23 @@ defmodule Reactive.Api do
 
   defp allow_event(module,type) do
     quote do
-      def exec(id=[unquote(module)|args],{:event,args=[unquote(type) | _]},contexts) do
-        Reactive.Entity.request(id,{:api_event,args})
+      def exec(id=[unquote(module)|args],{:event,margs=[unquote(type) | _],contexts}) do
+        Reactive.Entity.request(id,{:api_event,[contexts|margs]})
       end
     end
   end
 
   defp allow_event_call(module,method) do
     quote do
-      def exec(id=[unquote(module)|args],{:event,margs=[unquote(method) | _]},contexts) do
-        apply(module,:api_event,id|margs)
+      def exec(id=[unquote(module)|args],{:event,margs=[unquote(method) | _],contexts}) do
+        apply(module,:api_event,id|[contexts|margs])
       end
     end
   end
 
+  defp allow_gen(module,op,{what,auth_method}) when is_list(what) do
+    List.flatten(Enum.map(what, fn(w) -> allow_gen(module,op,{w,auth_method}) end))
+  end
   defp allow_gen(module,op,what) when is_list(what) do
     List.flatten(Enum.map(what, fn(w) -> allow_gen(module,op,w) end))
   end
@@ -137,13 +136,20 @@ defmodule Reactive.Api do
   end
   defp allow_gen(_module,:atoms,_atoms_list) do
   end
+  defp allow_gen(_module,:auth_method,_context_name,_context) do
+  end
 
   defmacro allow(module,what) do
-    {:__block__, [], List.flatten(Enum.map(what,fn({k,v})->allow_gen(module,k,v) end))}
+    context = what[:context] || :global
+    auth = what[:auth_method] || :none
+    case auth do
+      :none -> {:__block__, [], List.flatten(Enum.map(what,fn({k,v})->allow_gen(module,k,v) end))}
+      method -> {:__block__, [], List.flatten(Enum.map(what,fn({k,v})->allow_gen(module,k,{v,method}) end))}
+    end
   end
 
   defmacro __using__(_opts) do
-    quote do
+    quote location: :keep do
       require Reactive.Api
       import Reactive.Api
 
