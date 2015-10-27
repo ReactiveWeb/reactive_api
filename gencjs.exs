@@ -11,6 +11,7 @@ file_ast=Code.string_to_quoted!(code)
 IO.inspect block_ast
 
 clean_name=fn
+  {:__aliases__, _, parts} -> Enum.join(parts,".")
   ({v,_p}) -> v
   v -> v
 end
@@ -26,4 +27,4 @@ end)
 
 IO.inspect api_defs
 
-File.write(outFileName,"rapi=require('reactiveobserver-client').createReactiveApi\nmodule.exports=rapi(" <> :jsx.encode(api_defs) <> ")")
+File.write(outFileName,"module.exports=" <> :jsx.encode(api_defs) <> "\n")
