@@ -136,7 +136,7 @@ defmodule Reactive.Api do
   end
   defp allow_gen(_module,:atoms,_atoms_list) do
   end
-  defp allow_gen(_module,:auth_method,_context_name,_context) do
+  defp allow_gen(_module,:auth_method,_context_name) do
   end
 
   defmacro allow(module,what) do
