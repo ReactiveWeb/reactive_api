@@ -1,7 +1,6 @@
 defmodule Reactive.Api do
 
-
-  defp allow_observation(module,{what,auth_method},context) do
+  defp allow_observation(module,{what,auth_method}) do
     quote location: :keep do
       def exec(id=[unquote(module)|id_args],{:observe,what=unquote(what)},contexts) do
         case apply(__MODULE__,unquote(auth_method),[id,contexts,:observe,unquote(what)]) do
@@ -38,7 +37,7 @@ defmodule Reactive.Api do
     end
   end
 
-  defp allow_request(module,{type,auth_method},context) do
+  defp allow_request(module,{type,auth_method}) do
     quote location: :keep do
       def exec(id=[unquote(module)|id_args],{:request,args=[unquote(type) | _]},contexts) do
         case apply(__MODULE__,unquote(auth_method),[id,contexts,:request,args]) do
@@ -66,7 +65,7 @@ defmodule Reactive.Api do
     end
   end
 
-  defp allow_request_call(module,{type,auth_method},context) do
+  defp allow_request_call(module,{type,auth_method}) do
   #  IO.inspect({module,type,auth_method,context})
     quote location: :keep do
       def exec(id=[unquote(module)|id_args],{:request,aargs=[unquote(type) | args]},contexts) do
@@ -153,8 +152,10 @@ defmodule Reactive.Api do
       require Reactive.Api
       import Reactive.Api
 
-      def load_api do
+      def load_api() do
       end
+
+      defoverridable [load_api: 0]
 
       def observe([mod|margs],what,contexts) do
         moda=:erlang.binary_to_existing_atom("Elixir."<>mod,:utf8)
@@ -169,7 +170,7 @@ defmodule Reactive.Api do
       def get([mod|margs],what,contexts) do
         moda=:erlang.binary_to_existing_atom("Elixir."<>mod,:utf8)
         wha=:erlang.binary_to_existing_atom(what,:utf8)
-        exec([moda|map_args(margs)],{:get,what},contexts)
+        exec([moda|map_args(margs)],{:get,wha},contexts)
       end
       def request([mod|margs],method,args,contexts) do
         moda=:erlang.binary_to_existing_atom("Elixir."<>mod,:utf8)
