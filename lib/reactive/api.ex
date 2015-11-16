@@ -169,7 +169,7 @@ defmodule Reactive.Api do
       def get([mod|margs],what,contexts) do
         moda=:erlang.binary_to_existing_atom("Elixir."<>mod,:utf8)
         wha=:erlang.binary_to_existing_atom(what,:utf8)
-        exec([moda|map_args(margs)],{:get,what},contexts)
+        exec([moda|map_args(margs)],{:get,wha},contexts)
       end
       def request([mod|margs],method,args,contexts) do
         moda=:erlang.binary_to_existing_atom("Elixir."<>mod,:utf8)
