@@ -97,7 +97,7 @@ defmodule Reactive.Api do
   defp allow_event(module,type) do
     quote do
       def exec(id=[unquote(module)|args],{:event,margs=[unquote(type) | _],contexts}) do
-        Reactive.Entity.request(id,{:api_event,[contexts|margs]})
+        Reactive.Entity.event(id,{:api_event,contexts,margs})
       end
     end
   end

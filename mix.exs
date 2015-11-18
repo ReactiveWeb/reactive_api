@@ -3,7 +3,7 @@ defmodule Reactive.Api.Mixfile do
 
   def project do
     [app: :reactive_api,
-     version: "0.0.1",
+     version: "0.1.0",
      deps_path: "../../deps",
      lockfile: "../../mix.lock",
      elixir: "~> 1.0.0",
@@ -31,7 +31,7 @@ defmodule Reactive.Api.Mixfile do
   #
   # Type `mix help deps` for more examples and options
   defp deps do
-    [{:reactive_entity, in_umbrella: :yes},
+    [{:reactive_entity, github: "ReactiveWeb/reactive_entity"},
      { :jsx,  "~> 2.6.2" }]
   end
 end
