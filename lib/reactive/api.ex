@@ -5,19 +5,19 @@ defmodule Reactive.Api do
       def exec(id=[unquote(module)|id_args],{:observe,what=unquote(what)},contexts) do
         case apply(__MODULE__,unquote(auth_method),[id,contexts,:observe,unquote(what)]) do
           :allow -> Reactive.Entity.observe(id,what)
-          error -> raise error
+          error -> raise RuntimeError, message: error
         end
       end
       def exec(id=[unquote(module)|id_args],{:unobserve,what=unquote(what)},contexts) do
         case apply(__MODULE__,unquote(auth_method),[id,contexts,:observe,unquote(what)]) do
           :allow -> Reactive.Entity.unobserve(id,what)
-          error -> raise error
+          error -> raise RuntimeError, message: error
         end
       end
       def exec(id=[unquote(module)|id_args],{:get,what=unquote(what)},contexts) do
         case apply(__MODULE__,unquote(auth_method),[id,contexts,:observe,unquote(what)]) do
           :allow -> Reactive.Entity.get(id,what)
-          error -> raise error
+          error -> raise RuntimeError, message: error
         end
       end
     end
