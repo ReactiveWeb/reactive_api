@@ -6,7 +6,7 @@ code=File.read!(fileName)
 file_ast=Code.string_to_quoted!(code)
 
 {:defmodule, _,
-  [{:__aliases__, _, api_name}, [do: {:__block__,[], [{:use,_,[{:__aliases__, _, [:Reactive, :Api]}]} | block_ast]  }]]}=file_ast
+  [{:__aliases__, _, api_name}, [do: {:__block__,[], [{:use,_,_} | block_ast]  }]]}=file_ast
 
 IO.inspect block_ast
 

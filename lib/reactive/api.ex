@@ -5,19 +5,19 @@ defmodule Reactive.Api do
       def exec(id=[unquote(module)|id_args],{:observe,what=unquote(what)},contexts) do
         case apply(__MODULE__,unquote(auth_method),[id,contexts,:observe,unquote(what)]) do
           :allow -> Reactive.Entity.observe(id,what)
-          error -> raise RuntimeError, message: error
+          error -> raise RuntimeError, message: "observation #{inspect id} not allowed: #{inspect error}"
         end
       end
       def exec(id=[unquote(module)|id_args],{:unobserve,what=unquote(what)},contexts) do
         case apply(__MODULE__,unquote(auth_method),[id,contexts,:observe,unquote(what)]) do
           :allow -> Reactive.Entity.unobserve(id,what)
-          error -> raise RuntimeError, message: error
+          error -> raise RuntimeError, message: "observation #{inspect id} not allowed: #{inspect error}"
         end
       end
       def exec(id=[unquote(module)|id_args],{:get,what=unquote(what)},contexts) do
         case apply(__MODULE__,unquote(auth_method),[id,contexts,:observe,unquote(what)]) do
           :allow -> Reactive.Entity.get(id,what)
-          error -> raise RuntimeError, message: error
+          error -> raise RuntimeError, message: "observation #{inspect id} not allowed: #{inspect error}"
         end
       end
     end
@@ -147,57 +147,105 @@ defmodule Reactive.Api do
     end
   end
 
-  defmacro __using__(_opts) do
-    quote location: :keep do
-      require Reactive.Api
-      import Reactive.Api
-
-      def load_api() do
+  defmacro __using__(opts) do
+    simple=Dict.get(opts,:simple)
+    if(simple) do
+      quote location: :keep do
+        require Reactive.Api
+        import Reactive.Api
+  
+        def load_api() do
+        end
+  
+        defoverridable [load_api: 0]
+  
+        def observe([mod|margs],what,contexts) do
+          moda=:erlang.binary_to_existing_atom("Elixir."<>mod,:utf8)
+          wha=:erlang.binary_to_existing_atom(what,:utf8)
+          exec([moda|margs],{:observe,wha},contexts)
+        end
+        def unobserve([mod|margs],what,contexts) do
+          moda=:erlang.binary_to_existing_atom("Elixir."<>mod,:utf8)
+          wha=:erlang.binary_to_existing_atom(what,:utf8)
+          exec([moda|margs],{:unobserve,wha},contexts)
+        end
+        def get([mod|margs],what,contexts) do
+           moda=:erlang.binary_to_existing_atom("Elixir."<>mod,:utf8)
+          wha=:erlang.binary_to_existing_atom(what,:utf8)
+          exec([moda|margs],{:get,wha},contexts)
+        end
+        def request([mod|margs],method,args,contexts) do
+          moda=:erlang.binary_to_existing_atom("Elixir."<>mod,:utf8)
+          mta=:erlang.binary_to_existing_atom(method,:utf8)
+          exec([moda|margs],{:request,[mta|args]},contexts)
+        end
+        def request([mod|margs],method,args,timeout,contexts) do
+          moda=:erlang.binary_to_existing_atom("Elixir."<>mod,:utf8)
+          mta=:erlang.binary_to_existing_atom(method,:utf8)
+          exec([moda|margs],{:request,[mta|args],timeout},contexts)
+        end
+        def event([mod|margs],method,args,contexts) do
+         moda=:erlang.binary_to_existing_atom("Elixir."<>mod,:utf8)
+         mta=:erlang.binary_to_existing_atom(method,:utf8)
+         exec([moda|margs],{:event,[mta|args]},contexts)
+        end
+        def map_notification({:notify,[module|margs],what,{signal,args}}) do
+          << "Elixir." , ms :: binary >> = :erlang.atom_to_binary(module,:utf8)
+          {:notify,[ms|margs],:erlang.atom_to_binary(what,:utf8),{:erlang.atom_to_binary(signal,:utf8),args}}
+        end
       end
-
-      defoverridable [load_api: 0]
-
-      def observe([mod|margs],what,contexts) do
-        moda=:erlang.binary_to_existing_atom("Elixir."<>mod,:utf8)
-        wha=:erlang.binary_to_existing_atom(what,:utf8)
-        exec([moda|map_args(margs)],{:observe,wha},contexts)
+    else
+      quote location: :keep do
+        require Reactive.Api
+        import Reactive.Api
+  
+        def load_api() do
+        end
+  
+        defoverridable [load_api: 0]
+  
+        def observe([mod|margs],what,contexts) do
+          moda=:erlang.binary_to_existing_atom("Elixir."<>mod,:utf8)
+          wha=:erlang.binary_to_existing_atom(what,:utf8)
+          exec([moda|map_args(margs)],{:observe,wha},contexts)
+        end
+        def unobserve([mod|margs],what,contexts) do
+          moda=:erlang.binary_to_existing_atom("Elixir."<>mod,:utf8)
+          wha=:erlang.binary_to_existing_atom(what,:utf8)
+          exec([moda|map_args(margs)],{:unobserve,wha},contexts)
+        end
+        def get([mod|margs],what,contexts) do
+          moda=:erlang.binary_to_existing_atom("Elixir."<>mod,:utf8)
+          wha=:erlang.binary_to_existing_atom(what,:utf8)
+          exec([moda|map_args(margs)],{:get,wha},contexts)
+        end
+        def request([mod|margs],method,args,contexts) do
+          moda=:erlang.binary_to_existing_atom("Elixir."<>mod,:utf8)
+          mta=:erlang.binary_to_existing_atom(method,:utf8)
+          exec([moda|map_args(margs)],{:request,[mta|args]},contexts)
+        end
+        def request([mod|margs],method,args,timeout,contexts) do
+          moda=:erlang.binary_to_existing_atom("Elixir."<>mod,:utf8)
+          mta=:erlang.binary_to_existing_atom(method,:utf8)
+          exec([moda|map_args(margs)],{:request,[mta|args],timeout},contexts)
+        end
+        def event([mod|margs],method,args,contexts) do
+          moda=:erlang.binary_to_existing_atom("Elixir."<>mod,:utf8)
+          mta=:erlang.binary_to_existing_atom(method,:utf8)
+          exec([moda|map_args(margs)],{:event,[mta|args]},contexts)
+        end
+        def map_notification({:notify,[module|margs],what,{signal,args}}) do
+          << "Elixir." , ms :: binary >> = :erlang.atom_to_binary(module,:utf8) 
+          {:notify,[ms|margs],what,{signal,args}}
+        end
+        defp map_args(args) do
+          Enum.map(args,fn
+            (x = ("Elixir." <> name)) -> :erlang.binary_to_existing_atom(x,:utf8)
+            (x) -> x
+          end)
+        end
       end
-      def unobserve([mod|margs],what,contexts) do
-        moda=:erlang.binary_to_existing_atom("Elixir."<>mod,:utf8)
-        wha=:erlang.binary_to_existing_atom(what,:utf8)
-        exec([moda|map_args(margs)],{:unobserve,wha},contexts)
-      end
-      def get([mod|margs],what,contexts) do
-        moda=:erlang.binary_to_existing_atom("Elixir."<>mod,:utf8)
-        wha=:erlang.binary_to_existing_atom(what,:utf8)
-        exec([moda|map_args(margs)],{:get,wha},contexts)
-      end
-      def request([mod|margs],method,args,contexts) do
-        moda=:erlang.binary_to_existing_atom("Elixir."<>mod,:utf8)
-        mta=:erlang.binary_to_existing_atom(method,:utf8)
-        exec([moda|map_args(margs)],{:request,[mta|args]},contexts)
-      end
-      def request([mod|margs],method,args,timeout,contexts) do
-        moda=:erlang.binary_to_existing_atom("Elixir."<>mod,:utf8)
-        mta=:erlang.binary_to_existing_atom(method,:utf8)
-        exec([moda|map_args(margs)],{:request,[mta|args],timeout},contexts)
-      end
-      def event([mod|margs],method,args,contexts) do
-        moda=:erlang.binary_to_existing_atom("Elixir."<>mod,:utf8)
-        mta=:erlang.binary_to_existing_atom(method,:utf8)
-        exec([moda|map_args(margs)],{:event,[mta|args]},contexts)
-      end
-      def map_notification({:notify,[module|margs],what,{signal,args}}) do
-        << "Elixir." , ms :: binary >> = :erlang.atom_to_binary(module,:utf8) 
-        {:notify,[ms|margs],what,{signal,args}}
-      end
-      defp map_args(args) do
-        Enum.map(args,fn
-          (x = ("Elixir." <> name)) -> :erlang.binary_to_existing_atom(x,:utf8)
-          (x) -> x
-        end)
-      end
-    end
+    end  
   end
 
 end
