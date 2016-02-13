@@ -9,6 +9,18 @@ defmodule Reactive.Json do
     js2term(:jsx.decode(json,[labels: :attempt_atom]))
   end
 
+  def term2js(:true) do
+    :true
+  end
+  def term2js(:false) do
+    :false
+  end
+  def term2js(:null) do
+    :null
+  end
+  def term2js(:undefined) do
+    :undefined
+  end
   def term2js(tv) when is_atom(tv) do
     %{ "@a" => :erlang.atom_to_binary(tv,:utf8) }
   end
