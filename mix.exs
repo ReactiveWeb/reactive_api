@@ -32,8 +32,8 @@ defmodule Reactive.Api.Mixfile do
   # Type `mix help deps` for more examples and options
   defp deps do
     [
-     {:reactive_entity, git: "git@bitbucket.org:ScalableEngineering/reactive-entity.git"},
-     { :jsx,  "~> 2.6.2" }
-     ]
+      { :reactive_entity, git: "git@bitbucket.org:ScalableEngineering/reactive-entity.git"},
+      { :jsx,  "~> 2.6.2" }
+    ]
   end
 end
